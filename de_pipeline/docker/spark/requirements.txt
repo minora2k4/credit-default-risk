@@ -1,8 +1,0 @@
-# Pin giống conda env python3.10 của notebook (cùng Python 3.10), để tính toán pandas/ONNX cho kết quả giống hệt.
-# pyspark KHÔNG cài bằng pip: image đã có sẵn Spark 4.1.3 ở /opt/spark/python.
-pandas==2.3.3
-numpy==2.2.6
-pyarrow==25.0.1
-scikit-learn==1.7.2
-onnxruntime==1.23.2
-jupyterlab==4.6.4

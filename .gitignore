@@ -1,10 +1,11 @@
-/mlops_artifacts
+# Dữ liệu gốc và mô hình đã huấn luyện (sinh ra khi chạy)
 /data
-/de_pipeline/work
+/mlops_artifacts
 
-/CLAUDE.md
-/.claude
-/de_pipeline/plans
+# Dữ liệu trung gian và local passwords của pipeline
+/pipeline/work
+/pipeline/.env.local
+/pipeline/.env.grafana.local
 
 # Python
 __pycache__/

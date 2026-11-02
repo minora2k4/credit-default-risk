@@ -1,8 +1,0 @@
-# Image riêng cho bộ sinh dữ liệu: SDV kéo theo torch (bản CPU), nên tách khỏi image simulator để image đó nhẹ.
-# Pin giống bản đã chạy thử thành công.
-pandas==2.3.3
-numpy==2.2.6
-scikit-learn==1.7.2
-scipy==1.15.3
-pyarrow==25.0.1
-sdv==2.0.0

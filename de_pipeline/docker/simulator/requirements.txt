@@ -1,6 +1,0 @@
-# Pin giống conda env của notebook để phép chia train/test và dữ liệu giống hệt
-pandas==2.3.3
-numpy==2.2.6
-scikit-learn==1.7.2
-pyarrow==25.0.1
-confluent-kafka==2.16.0
