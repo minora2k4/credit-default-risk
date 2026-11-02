@@ -1,0 +1,46 @@
+# PostgreSQL lưu kết quả chấm điểm để tra cứu theo từng hồ sơ và cho Grafana đọc; HDFS giữ toàn bộ lịch sử.
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    hostname: postgres
+    environment:
+      POSTGRES_USER: credit
+      POSTGRES_DB: credit
+    # POSTGRES_PASSWORD nằm trong .env.local (không đưa lên git)
+    env_file:
+      - path: ../.env.local
+        required: false
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "work_mem=8MB", "-c", "max_connections=30"]
+    ports:
+      - "${BIND_ADDR}:${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # file .sql trong thư mục này chạy một lần khi volume còn trống
+      - ../docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U credit -d credit"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # giao diện web duyệt bảng và chạy SQL (http://localhost:8090), chỉ chạy với profile ui.
+  # Đăng nhập: PostgreSQL, máy chủ postgres, người dùng credit, mật khẩu trong .env.local, CSDL credit
+  adminer:
+    image: ${ADMINER_IMAGE}
+    profiles: ["ui"]
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha
+    ports:
+      - "${BIND_ADDR}:${ADMINER_PORT}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 128m
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

@@ -1,0 +1,80 @@
+# Spark standalone: 1 master và 1 worker, cùng dùng một image tự build (driver và executor phải cùng môi trường Python).
+# Kích thước worker chỉnh bằng SPARK_WORKER_CORES và SPARK_WORKER_MEMORY trong .env.
+x-spark-image: &spark-image
+  build: ../docker/spark
+  image: credit-spark:local
+
+services:
+  spark-master:
+    <<: *spark-image
+    hostname: spark-master
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master", "--host", "spark-master", "--port", "7077", "--webui-port", "8080"]
+    environment:
+      SPARK_DAEMON_MEMORY: 512m
+    ports:
+      - "${BIND_ADDR}:${SPARK_MASTER_UI_PORT}:8080"
+    mem_limit: 768m
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080', timeout=5)\""]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
+
+  spark-worker-1:
+    <<: *spark-image
+    hostname: spark-worker-1
+    # chạy foreground bằng spark-class (không dùng start-worker.sh) để container sống cùng tiến trình và log ra stdout
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077",
+              "--cores", "${SPARK_WORKER_CORES}", "--memory", "${SPARK_WORKER_MEMORY}", "--webui-port", "8081", "--work-dir", "/tmp/spark-worker"]
+    environment:
+      SPARK_DAEMON_MEMORY: 512m
+    ports:
+      - "${BIND_ADDR}:${SPARK_WORKER_UI_PORT}:8081"
+    volumes:
+      - ..:/opt/pipeline:ro   # Python worker của executor import credit_pipeline từ đây
+    depends_on:
+      spark-master:
+        condition: service_healthy
+    # container chứa cả executor (JVM) lẫn các Python worker nên giới hạn lớn hơn SPARK_WORKER_MEMORY
+    mem_limit: 4g
+    restart: unless-stopped
+
+  # chạy các job batch một lần: docker compose --profile tools run --rm spark-client spark-submit ...
+  spark-client:
+    <<: *spark-image
+    profiles: ["tools"]
+    env_file:
+      - path: ../.env.local      # POSTGRES_PASSWORD, cho verify_stream.py
+        required: false
+    volumes:
+      - ..:/opt/pipeline
+    mem_limit: 1536m
+    command: ["bash"]
+
+  # job streaming chạy thường trực (make stream-up)
+  spark-stream:
+    <<: *spark-image
+    profiles: ["stream"]
+    command: ["spark-submit", "/opt/pipeline/jobs/stream_score.py"]
+    working_dir: /opt/pipeline
+    env_file:
+      - path: ../.env.local      # POSTGRES_PASSWORD
+        required: false
+    volumes:
+      - ..:/opt/pipeline
+    ports:
+      - "${BIND_ADDR}:${SPARK_DRIVER_UI_PORT}:4040"   # giao diện Spark, tab Structured Streaming
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      spark-master:
+        condition: service_healthy
+      namenode:
+        condition: service_healthy
+    mem_limit: 1536m
+    # job lỗi thì tự khởi động lại và chạy tiếp từ checkpoint
+    restart: on-failure

@@ -1,0 +1,48 @@
+# HDFS: 1 NameNode và 1 DataNode. Đường dẫn tương đối trong file này tính từ thư mục compose/.
+
+services:
+  namenode:
+    image: ${HADOOP_IMAGE}
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    env_file: ../docker/hadoop/hadoop.env
+    environment:
+      # thư mục này chưa có thì image tự format NameNode (chỉ chạy lần đầu)
+      ENSURE_NAMENODE_DIR: /data/hdfs/name
+    ports:
+      - "${BIND_ADDR}:${HDFS_UI_PORT}:9870"
+    volumes:
+      - namenode_data:/data
+      - ../docker/hadoop/exclude:/opt/hadoop-exclude:ro
+      # CSV gốc và mô hình, chỉ đọc; mount vào /raw vì /data dành cho dữ liệu HDFS
+      - ../../data:/raw:ro
+      - ../../mlops_artifacts:/artifacts:ro
+      # dữ liệu trung gian trên máy (bảng tham chiếu của notebook, holdout_ids), chỉ đọc
+      - ../work:/work:ro
+    mem_limit: 1g
+    healthcheck:
+      # chỉ cần NameNode phản hồi, không đòi thoát safemode: sau khi khởi động lại, NameNode ở safemode cho tới khi
+      # DataNode báo block, mà DataNode lại chờ NameNode healthy mới chạy
+      test: ["CMD-SHELL", "/opt/hadoop/bin/hdfs dfsadmin -safemode get | grep -q 'Safe mode is'"]
+      interval: 10s
+      timeout: 20s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  datanode1:
+    image: ${HADOOP_IMAGE}
+    hostname: datanode1
+    command: ["hdfs", "datanode"]
+    env_file: ../docker/hadoop/hadoop.env
+    volumes:
+      - datanode1_data:/data
+    depends_on:
+      namenode:
+        condition: service_healthy
+    mem_limit: 1g
+    restart: unless-stopped
+
+volumes:
+  namenode_data:
+  datanode1_data:

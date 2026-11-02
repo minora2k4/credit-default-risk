@@ -1,0 +1,6 @@
+# Cùng phiên bản với môi trường huấn luyện để phép chia train/test giống hệt
+pandas==2.3.3
+numpy==2.2.6
+scikit-learn==1.7.2
+pyarrow==25.0.1
+confluent-kafka==2.16.0

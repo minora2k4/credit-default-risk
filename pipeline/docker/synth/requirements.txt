@@ -1,0 +1,7 @@
+# Image riêng cho bộ sinh dữ liệu vì SDV kéo theo torch; tách ra để image simulator nhẹ.
+pandas==2.3.3
+numpy==2.2.6
+scikit-learn==1.7.2
+scipy==1.15.3
+pyarrow==25.0.1
+sdv==2.0.0

@@ -1,0 +1,37 @@
+# Grafana: dashboard giám sát pipeline, đọc PostgreSQL. Chạy với profile ui (make grafana-up, http://localhost:3000).
+services:
+  grafana:
+    image: ${GRAFANA_IMAGE}
+    profiles: ["ui"]
+    # mật khẩu admin Grafana và mật khẩu vai trò chỉ-đọc của Postgres; không dùng .env.local để Grafana không nắm
+    # mật khẩu superuser của Postgres
+    env_file:
+      - path: ../.env.grafana.local
+        required: false
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/credit_stream.json
+    ports:
+      - "${BIND_ADDR}:${GRAFANA_PORT}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      # datasource và dashboard khai báo bằng file nên dựng lại từ đầu vẫn có đủ
+      - ../docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health | grep -q ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  grafana_data:

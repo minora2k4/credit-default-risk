@@ -1,0 +1,8 @@
+# Cùng phiên bản với môi trường huấn luyện (Python 3.10) để kết quả tính toán giống hệt.
+# pyspark không cài bằng pip vì image đã có sẵn Spark 4.1.3.
+pandas==2.3.3
+numpy==2.2.6
+pyarrow==25.0.1
+scikit-learn==1.7.2
+onnxruntime==1.23.2
+psycopg[binary]==3.3.6   # ghi kết quả vào PostgreSQL

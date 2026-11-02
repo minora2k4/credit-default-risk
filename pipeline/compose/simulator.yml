@@ -1,0 +1,48 @@
+# Giả lập hồ sơ vay: tạo pool dữ liệu, gửi vào Kafka, hoặc chạy liên tục.
+services:
+  # tạo pool hồ sơ thật và gửi hồ sơ vào Kafka (profile sim)
+  simulator:
+    build: ../docker/simulator
+    image: credit-simulator:local
+    profiles: ["sim"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    # chạy bằng uid của người dùng để file ghi ra work/ không thuộc về root
+    user: "${HOST_UID}:${HOST_GID}"
+    volumes:
+      - ..:/opt/pipeline          # code và thư mục work/ (ghi được)
+      - ../../data:/data:ro       # CSV gốc, chỉ đọc
+    # tạo pool cần khoảng 2 GB (pandas đọc CSV); gửi hồ sơ nhẹ hơn nhiều
+    mem_limit: 2g
+
+  # sinh dữ liệu tổng hợp bằng SDV; image riêng vì SDV kéo theo torch (profile sim)
+  synthesizer:
+    build: ../docker/synth
+    image: credit-synthesizer:local
+    profiles: ["sim"]
+    user: "${HOST_UID}:${HOST_GID}"
+    volumes:
+      - ..:/opt/pipeline
+      - ../../data:/data:ro
+    # đỉnh RAM đo được khoảng 1.9 GB khi fit SDV trên 255 nghìn dòng
+    mem_limit: 4g
+
+  # phát hồ sơ mới liên tục (mỗi hồ sơ một ID mới) đến khi dừng, để giám sát pipeline (make live-start, make live-stop)
+  simulator-live:
+    build: ../docker/simulator
+    image: credit-simulator:local
+    profiles: ["live"]
+    command: ["python", "simulator/producer.py", "--source", "synthetic", "--forever",
+              "--rate", "${LIVE_RATE}", "--outcome-delay", "${LIVE_OUTCOME_DELAY}"]
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    user: "${HOST_UID}:${HOST_GID}"
+    volumes:
+      - ..:/opt/pipeline
+    depends_on:
+      kafka:
+        condition: service_healthy
+    mem_limit: 512m
+    # khi dừng, producer nhận SIGTERM, gửi nốt nhãn đang chờ rồi thoát
+    stop_grace_period: 20s
+    restart: unless-stopped

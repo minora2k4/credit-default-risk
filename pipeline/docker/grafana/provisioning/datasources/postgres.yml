@@ -1,0 +1,17 @@
+apiVersion: 1
+datasources:
+  - name: Credit PostgreSQL
+    uid: credit-pg                       # cố định để dashboard tham chiếu được
+    type: grafana-postgresql-datasource
+    access: proxy
+    url: postgres:5432
+    user: grafana_reader                 # vai trò chỉ-đọc, chỉ SELECT được các view v_*
+    database: credit
+    isDefault: true
+    jsonData:
+      database: credit
+      sslmode: disable
+      postgresVersion: 1700
+      timescaledb: false
+    secureJsonData:
+      password: $GRAFANA_DB_PASSWORD     # lấy từ biến môi trường (.env.grafana.local), không ghi cứng

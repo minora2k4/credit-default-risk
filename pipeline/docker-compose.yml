@@ -1,0 +1,13 @@
+name: credit
+
+include:
+  - compose/hdfs.yml         
+  - compose/kafka.yml       
+  - compose/spark.yml       
+  - compose/postgres.yml   
+  - compose/simulator.yml  
+  - compose/monitoring.yml  
+
+networks:
+  default:
+    name: credit-net
