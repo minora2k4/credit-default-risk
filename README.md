@@ -23,7 +23,7 @@ Dữ liệu hiện có chỉ cho phép phân biệt vừa phải giữa hồ sơ
 
 ## Kiến trúc pipeline
 
-<p align="center"><img src="pipeline/docs/architecture.svg" alt="Kiến trúc pipeline" width="100%"></p>
+<p align="center"><img src="pipeline/images/architecture.png" alt="Kiến trúc pipeline" width="100%"></p>
 
 Batch và streaming dùng chung một bộ mã làm sạch, tạo đặc trưng và chấm điểm. Kết quả streaming được kiểm chứng khớp với batch và với notebook huấn luyện (ROC-AUC online 0.7801 trên tập test thật).
 
@@ -66,3 +66,5 @@ Batch và streaming dùng chung một bộ mã làm sạch, tạo đặc trưng 
    ```
 
 `make help` liệt kê mọi lệnh của pipeline.
+
+<p align="center"><img src="pipeline/images/dashboard.png" alt="Dashboard Grafana" width="100%"></p>
