@@ -13,7 +13,7 @@ Mô hình chỉ cho ra **xác suất vỡ nợ**. Cột `decision` là quy tắc
 
 ## 2. Kiến trúc
 
-<p align="center"><img src="docs/architecture.svg" alt="Kiến trúc pipeline" width="100%"></p>
+<p align="center"><img src="images/architecture.png" alt="Kiến trúc pipeline" width="100%"></p>
 
 ## 3. Công cụ
 
@@ -84,6 +84,8 @@ Dữ liệu sinh: bảng hồ sơ dùng SDV GaussianCopula **fit riêng từng l
 | Spark master | http://localhost:8080 | Worker và ứng dụng đang chạy |
 | Spark driver | http://localhost:4040 | Tab Structured Streaming: tốc độ vào, tốc độ xử lý |
 | HDFS | http://localhost:9870 | DataNode, dung lượng, block |
+
+<p align="center"><img src="images/dashboard.png" alt="Dashboard Grafana" width="80%"></p>
 
 ## 9. Kết quả kiểm chứng
 
