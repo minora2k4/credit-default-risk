@@ -85,7 +85,7 @@ Dữ liệu sinh: bảng hồ sơ dùng SDV GaussianCopula **fit riêng từng l
 | Spark driver | http://localhost:4040 | Tab Structured Streaming: tốc độ vào, tốc độ xử lý |
 | HDFS | http://localhost:9870 | DataNode, dung lượng, block |
 
-<p align="center"><img src="images/dashboard.png" alt="Dashboard Grafana" width="80%"></p>
+<p align="center"><img src="images/dashboard.png" alt="Dashboard Grafana" width="100%"></p>
 
 ## 9. Kết quả kiểm chứng
 
