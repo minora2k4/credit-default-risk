@@ -22,7 +22,8 @@ STAGE ?= cash
         sim-pool-real sim-pool-synth reference \
         silver features score compare \
         stream-up stream-down stream-logs simulate stream-wait verify \
-        db-monitoring grafana-up ui-up live-start live-stop live-logs
+        db-monitoring grafana-up ui-up live-start live-stop live-logs \
+        bench-kafka bench-batch bench-stream bench-report bench-clean
 
 help: ## Liệt kê các lệnh
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -158,6 +159,23 @@ live-stop: ## Dừng producer chạy liên tục
 
 live-logs: ## Xem log producer chạy liên tục (Ctrl+C để thoát, producer vẫn chạy)
 	docker compose --profile live logs -f --tail=20 simulator-live
+
+# --- Benchmark (kết quả ở work/benchmark; xem README mục 13) -------------------------------------------------------
+
+bench-kafka: ## Benchmark Kafka bằng công cụ chuẩn của Kafka, payload là hồ sơ thật (khoảng 1 giờ)
+	python3 benchmark/kafka_bench.py
+
+bench-batch: ## Benchmark các job Spark batch, ghi đè silver và gold bằng cùng dữ liệu (khoảng 1 giờ)
+	python3 benchmark/spark_batch_bench.py
+
+bench-stream: ## Benchmark Spark streaming: năng lực và tải đều (khoảng 2.5 giờ)
+	python3 benchmark/stream_bench.py --experiment all
+
+bench-report: ## In bảng tổng hợp kết quả benchmark
+	python3 benchmark/report.py
+
+bench-clean: ## Xóa dữ liệu của benchmark: topic bench_*, database credit_bench, HDFS /benchmark (giữ kết quả đo)
+	python3 benchmark/clean.py
 
 # --- Chạy toàn bộ ----------------------------------------------------------------------------------------------
 

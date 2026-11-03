@@ -1,6 +1,6 @@
 """Chấm điểm hồ sơ vay mới từ Kafka theo thời gian thực bằng Spark Structured Streaming.
 
-  loan_applications ─► mỗi 10 giây: làm sạch, tạo đặc trưng, chấm điểm bằng ONNX (cùng hàm với batch)
+  loan_applications ─► mỗi 6 giây: làm sạch, tạo đặc trưng, chấm điểm bằng ONNX (cùng hàm với batch)
                        ├─► HDFS: message thô (bronze) và kết quả (gold)
                        └─► PostgreSQL: bảng loan_predictions (upsert)
   loan_outcomes      ─► nhãn vỡ nợ đến sau, ghi vào HDFS và bảng loan_outcomes
@@ -27,8 +27,10 @@ from credit_pipeline.schemas import MESSAGE_SCHEMA, OUTCOME_SCHEMA
 from credit_pipeline.scoring import add_scores
 from credit_pipeline.sinks import upsert_outcomes, upsert_predictions
 
-TRIGGER = "10 seconds"
-MAX_APPLICATIONS_PER_BATCH = 2000
+# chọn theo benchmark (README mục 13): mỗi batch tốn khoảng 5 giây bất kể số hồ sơ, nên 6 giây là trigger ngắn nhất còn dư địa,
+# và giới hạn 8000 hồ sơ cho phép xử lý tồn đọng khoảng 1,000 hồ sơ/giây
+TRIGGER = "6 seconds"
+MAX_APPLICATIONS_PER_BATCH = 8000
 MAX_OUTCOMES_PER_BATCH = 5000
 HEARTBEAT_SECONDS = 60
 
@@ -171,7 +173,7 @@ def make_outcomes_handler(log):
 def main(log):
     # job chạy thường trực nên dùng ít tài nguyên (2 core, executor 1 GB) để chừa chỗ cho các dịch vụ khác
     spark = start_spark("stream_score", log, {
-        "spark.cores.max": "2", "spark.executor.memory": "1g", "spark.sql.shuffle.partitions": "8"})
+        "spark.cores.max": "2", "spark.executor.memory": "1g", "spark.sql.shuffle.partitions": "4"})
     metadata = load_model_metadata(spark)
     feature_names, threshold = metadata["feature_names"], metadata["decision_threshold"]
     log(f"Đã đọc mô hình: {len(feature_names)} đặc trưng, ngưỡng quyết định {threshold:.6f}")

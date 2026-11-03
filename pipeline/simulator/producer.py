@@ -164,8 +164,9 @@ def main():
         nonlocal sent_outcomes
         while pending_outcomes and (force or pending_outcomes[0][0] <= now):
             due, application_id, target = pending_outcomes.popleft()
-            if force and wait and due > time.monotonic():
-                time.sleep(due - time.monotonic())
+            remaining = due - time.monotonic()
+            if force and wait and remaining > 0:
+                time.sleep(remaining)
             value = json.dumps({"application_id": application_id, "TARGET": target, "outcome_time": utc_now_iso()})
             send(OUTCOMES_TOPIC, application_id, value)
             sent_outcomes += 1

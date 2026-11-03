@@ -27,6 +27,17 @@ Dữ liệu hiện có chỉ cho phép phân biệt vừa phải giữa hồ sơ
 
 Batch và streaming dùng chung một bộ mã làm sạch, tạo đặc trưng và chấm điểm. Kết quả streaming được kiểm chứng khớp với batch và với notebook huấn luyện (ROC-AUC online 0.7801 trên tập test thật).
 
+## Hiệu năng
+
+Đo trên laptop Intel i5-11400H, 15 GB RAM, cả cụm chạy trong Docker. Chi tiết, cách đo và giới hạn của số liệu nằm ở [pipeline/README.md](pipeline/README.md#13-benchmark).
+
+| Thành phần | Kết quả |
+|---|---|
+| Kafka, ghi | 72,304 hồ sơ/s (496 MB/s trước nén), p99 32 ms, nén 15 lần |
+| Kafka, đọc | 132,153 hồ sơ/s (907 MB/s) với một consumer |
+| Spark batch | Cả ba job khoảng 100 giây với 4 core: làm sạch 29.3 triệu dòng, tạo 221 đặc trưng và chấm 278,220 hồ sơ |
+| Spark streaming | Theo kịp khoảng 550 hồ sơ/s; ở 150 hồ sơ/s độ trễ end-to-end p50 7.8 giây, p95 10.5 giây |
+
 ## Cấu trúc thư mục
 
 ```
